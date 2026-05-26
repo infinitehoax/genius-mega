@@ -6,6 +6,7 @@ on:
       - 'src/**'         # Only run when you edit your code
       - 'package.json'
       - 'webpack.config.js'
+  workflow_dispatch:     # 👈 THIS ADDS THE MANUAL BUTTON!
 
 jobs:
   build:
