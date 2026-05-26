@@ -3,10 +3,10 @@ name: Auto-Build Genius Script
 on:
   push:
     paths:
-      - 'src/**'         # Only run when you edit your code
+      - 'src/**'
       - 'package.json'
       - 'webpack.config.js'
-  workflow_dispatch:     # 👈 THIS ADDS THE MANUAL BUTTON!
+  workflow_dispatch: {}
 
 jobs:
   build:
@@ -32,5 +32,5 @@ jobs:
       - name: Commit and push bundle.js
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "🤖 Auto-build bundle.js [skip ci]"
+          commit_message: "Auto-build bundle.js [skip ci]"
           file_pattern: dist/bundle.js
