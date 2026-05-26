@@ -1,0 +1,35 @@
+name: Auto-Build Genius Script
+
+on:
+  push:
+    paths:
+      - 'src/**'         # Only run when you edit your code
+      - 'package.json'
+      - 'webpack.config.js'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the project
+        run: npm run build
+
+      - name: Commit and push bundle.js
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 Auto-build bundle.js [skip ci]"
+          file_pattern: dist/bundle.js
