@@ -4,27 +4,82 @@ export interface DropdownItem {
     span?: number;
 }
 
-export const createDropdown = (label: string, items: DropdownItem[], columns: number | string = 1) => {
+export const createDropdown = (label: string, items: DropdownItem[], columns: number | string = 1, isIcon: boolean = false) => {
     const wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
+    wrapper.style.display = 'inline-block';
 
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'SmallButton__Container-sc-52e3e09f-0 eAerHv';
-    btn.style.cssText = `display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%;`;
-    btn.innerHTML = `<span style="justify-self: center;">${label}</span><span style="justify-self: end;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 7" width="8" height="6.21"><path d="M4.488 7 0 0h8.977L4.488 7Z"></path></svg></span>`;
+    btn.className = 'gtt-dropdown-button';
+    btn.style.cssText = `
+        height: 24px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 2px 6px;
+        color: #555;
+        border-radius: 2px;
+        font-family: inherit;
+        font-size: 13px;
+    `;
+
+    if (isIcon) {
+        btn.innerHTML = `${label}`;
+    } else {
+        btn.innerHTML = `<span style="white-space: nowrap;">${label}</span> <svg width="8" height="6" viewBox="0 0 9 7" fill="currentColor" style="opacity: 0.6;"><path d="M4.488 7 0 0h8.977L4.488 7Z"></path></svg>`;
+    }
 
     const menu = document.createElement('div');
-    menu.style.cssText = `position: absolute; top: 107.5%; background: white; border: 1px solid #000; padding: 0.25rem; display: none; z-index: 9999; border-radius: 0.5rem; width: 100%; grid-template-columns: repeat(${columns === 'auto-fit' ? 'auto-fit' : columns}, minmax(1rem, 1fr)); gap: 0.125rem;`;
+    menu.className = 'gtt-dropdown-menu';
+    menu.style.cssText = `
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 4px 0;
+        display: none;
+        z-index: 10000;
+        min-width: 120px;
+        max-height: 300px;
+        overflow-y: auto;
+    `;
+
+    if (columns !== 1) {
+        menu.style.display = 'none'; // Will be set to 'grid' when visible
+        menu.style.gridTemplateColumns = `repeat(${columns === 'auto-fit' ? 'auto-fit' : columns}, minmax(30px, 1fr))`;
+        menu.style.gap = '2px';
+        menu.style.padding = '4px';
+    }
 
     items.forEach(item => {
         const itemBtn = document.createElement('button');
         itemBtn.innerHTML = item.label;
-        itemBtn.style.cssText = `padding: 0.25rem; cursor: pointer; border-radius: 0.125rem; font-size: 0.75rem; border: none; background: transparent; transition: background 0.2s;`;
+        itemBtn.style.cssText = `
+            display: block;
+            width: 100%;
+            padding: 6px 12px;
+            text-align: left;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            color: #333;
+            transition: background 0.1s;
+        `;
+        if (columns !== 1) {
+            itemBtn.style.padding = '4px';
+            itemBtn.style.textAlign = 'center';
+            if (item.span) itemBtn.style.gridColumn = `span ${item.span}`;
+        }
+
         itemBtn.onmouseover = () => itemBtn.style.background = '#f0f0f0';
         itemBtn.onmouseout = () => itemBtn.style.background = 'transparent';
-
-        if (item.span) itemBtn.style.gridColumn = `span ${item.span}`;
 
         itemBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -37,22 +92,19 @@ export const createDropdown = (label: string, items: DropdownItem[], columns: nu
 
     btn.addEventListener('click', (e) => {
         e.preventDefault();
-        const isVisible = menu.style.display === 'grid';
-        document.querySelectorAll('.gtt-dropdown-menu').forEach(m => (m as HTMLElement).style.display = 'none'); // Close others
-        menu.style.display = isVisible ? 'none' : 'grid';
+        e.stopPropagation();
+        const isVisible = menu.style.display === (columns === 1 ? 'block' : 'grid');
+        document.querySelectorAll('.gtt-dropdown-menu').forEach(m => (m as HTMLElement).style.display = 'none');
+        menu.style.display = isVisible ? 'none' : (columns === 1 ? 'block' : 'grid');
     });
 
-    menu.classList.add('gtt-dropdown-menu'); // Tag for global closing
     wrapper.appendChild(btn);
     wrapper.appendChild(menu);
     return wrapper;
 };
 
-// Global click handler to close dropdowns
 if (typeof document !== 'undefined') {
-    document.addEventListener('click', (e) => {
-        if (!(e.target as HTMLElement).closest('.gtt-dropdown-menu') && !(e.target as HTMLElement).closest('button')) {
-            document.querySelectorAll('.gtt-dropdown-menu').forEach(m => (m as HTMLElement).style.display = 'none');
-        }
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.gtt-dropdown-menu').forEach(m => (m as HTMLElement).style.display = 'none');
     });
 }

@@ -2,10 +2,30 @@ export const createButton = (label: string, title: string, onClick: () => void, 
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.title = title;
-    // Using Genius generic styled classes
-    btn.className = 'SmallButton__Container-sc-52e3e09f-0 eAerHv';
-    btn.style.cssText = `min-width: 0px; width: 100%; display: flex; align-items: center; justify-content: center; ${extraStyles}`;
+    // We'll use a more generic style now, but can keep the Genius class if it helps with base styles
+    btn.className = 'gtt-button';
+    btn.style.cssText = `
+        min-width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 2px 4px;
+        color: #555;
+        border-radius: 2px;
+        font-family: inherit;
+        font-size: 13px;
+        transition: background 0.1s;
+        ${extraStyles}
+    `;
     btn.innerHTML = label;
+
+    btn.onmouseover = () => btn.style.background = '#e8e8e8';
+    btn.onmouseout = () => btn.style.background = 'transparent';
+
     btn.addEventListener('click', (e) => {
         e.preventDefault();
         onClick();

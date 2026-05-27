@@ -1,48 +1,84 @@
 import { createButton } from './ButtonBuilder';
 import { createDropdown } from './Dropdown';
-import { insertText } from '../core/EditorManager';
+import { insertText, applyListFormatting, applyAlignment } from '../core/EditorManager';
 import { fixPunctuation } from '../features/Cleanups/Punctuation';
 import { fixCapitalization } from '../features/Cleanups/Capitalization';
+import { Icons } from './Icons';
 
 export const createStylesGrid = () => {
-    const stylesGrid = document.createElement('div');
-    stylesGrid.style.cssText = "display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;";
+    const container = document.createElement('div');
+    container.style.cssText = "display: flex; align-items: center; gap: 2px; flex: 1;";
 
-    stylesGrid.appendChild(createButton('<i>Italic</i>', 'Italic', () => insertText('<i>', '</i>')));
-    stylesGrid.appendChild(createButton('<b>Bold</b>', 'Bold', () => insertText('<b>', '</b>')));
-    stylesGrid.appendChild(createButton('<b><i>Italic + Bold</i></b>', 'Italic+Bold', () => insertText('<b><i>', '</i></b>')));
-    stylesGrid.appendChild(createButton('Parentheses', 'Parentheses', () => insertText('(', ')')));
+    // Bold, Italic, Underline, Strikethrough
+    container.appendChild(createButton(Icons.Bold, 'Bold', () => insertText('<b>', '</b>')));
+    container.appendChild(createButton(Icons.Italic, 'Italic', () => insertText('<i>', '</i>')));
+    container.appendChild(createButton(Icons.Underline, 'Underline', () => insertText('<u>', '</u>')));
+    container.appendChild(createButton(Icons.Strikethrough, 'Strikethrough', () => insertText('<s>', '</s>')));
 
-    // Diacritics Uppercase
-    const upperDiacritics = 'ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜĆŃŚŹČĞŠŽÇŞIÑĐÆŒẞ'.split('');
-    stylesGrid.appendChild(createDropdown('Diacritics (UC)', upperDiacritics.map(char => ({
+    // Separator
+    const sep = document.createElement('div');
+    sep.style.cssText = "width: 1px; height: 18px; background: #ddd; margin: 0 4px;";
+    container.appendChild(sep);
+
+    // Lists
+    container.appendChild(createButton(Icons.ListUnordered, 'Unordered List', () => applyListFormatting('ul')));
+    container.appendChild(createButton(Icons.ListOrdered, 'Ordered List', () => applyListFormatting('ol')));
+
+    // Separator
+    const sep2 = document.createElement('div');
+    sep2.style.cssText = "width: 1px; height: 18px; background: #ddd; margin: 0 4px;";
+    container.appendChild(sep2);
+
+    // Alignment
+    container.appendChild(createButton(Icons.AlignLeft, 'Align Left', () => applyAlignment('left')));
+    container.appendChild(createButton(Icons.AlignCenter, 'Align Center', () => applyAlignment('center')));
+    container.appendChild(createButton(Icons.AlignRight, 'Align Right', () => applyAlignment('right')));
+
+    // Separator
+    const sep3 = document.createElement('div');
+    sep3.style.cssText = "width: 1px; height: 18px; background: #ddd; margin: 0 4px;";
+    container.appendChild(sep3);
+
+    // Clear Formatting
+    container.appendChild(createButton(Icons.Clear, 'Clear Formatting', () => {
+        const textarea = (document.querySelector('textarea') as HTMLTextAreaElement);
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value.substring(start, end);
+        const cleaned = text.replace(/<[^>]*>/g, '');
+        textarea.setRangeText(cleaned, start, end, 'select');
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    }));
+
+    // More Dropdown
+    const moreItems = [
+        { label: 'Fix Punctuation', action: fixPunctuation },
+        { label: 'Fix Capitalization', action: fixCapitalization },
+        { label: 'ZWSP', action: () => insertText('\u200B') },
+        { label: 'NBSP', action: () => insertText('\u00A0') }
+    ];
+
+    const diacriticsUC = 'ÁÀÂÄÉÈÊËÍÌÎÏÓÒÔÖÚÙÛÜĆŃŚŹČĞŠŽÇŞIÑĐÆŒẞ'.split('').map(char => ({
         label: char, action: () => insertText(char)
-    })), 'auto-fit'));
+    }));
 
-    // Diacritics Lowercase
-    const lowerDiacritics = 'áàâäéèêëíìîïóòôöúùûüćńśźčğšžçşıñđæœß'.split('');
-    stylesGrid.appendChild(createDropdown('Diacritics (LC)', lowerDiacritics.map(char => ({
+    const diacriticsLC = 'áàâäéèêëíìîïóòôöúùûüćńśźčğšžçşıñđæœß'.split('').map(char => ({
         label: char, action: () => insertText(char)
-    })), 'auto-fit'));
+    }));
 
-    // Symbols
-    stylesGrid.appendChild(createDropdown('Symbols', [
-        { label: '(', action: () => insertText('(') },
-        { label: ')', action: () => insertText(')') },
-        { label: '<', action: () => insertText('<') },
-        { label: '>', action: () => insertText('>') },
-        { label: '–', action: () => insertText('–') }, // En-dash
-        { label: '—', action: () => insertText('—') }, // Em-dash
-        { label: '„...“', span: 2, action: () => insertText('„', '“') },
-        { label: 'ZWSP', span: 2, action: () => insertText('\u200B') }, // Zero width space
-        { label: 'NBSP', span: 2, action: () => insertText('\u00A0') }  // Non-breaking space
-    ], 'auto-fit'));
+    const moreDropdown = createDropdown(Icons.More, [
+        ...moreItems,
+        { label: '--- Diacritics (UC) ---', action: () => {} },
+        ...diacriticsUC,
+        { label: '--- Diacritics (LC) ---', action: () => {} },
+        ...diacriticsLC
+    ], 1, true);
 
-    // Cleanups Menu
-    stylesGrid.appendChild(createDropdown('🧹 Cleanups', [
-        { label: 'Fix Punctuation', span: 1, action: fixPunctuation },
-        { label: 'Fix Capitalization', span: 1, action: fixCapitalization }
-    ], 1));
+    const moreWrapper = document.createElement('div');
+    moreWrapper.style.marginLeft = 'auto';
+    moreWrapper.appendChild(moreDropdown);
+    container.appendChild(moreWrapper);
 
-    return stylesGrid;
+    return container;
 };
